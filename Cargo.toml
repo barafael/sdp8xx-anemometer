@@ -1,0 +1,35 @@
+[package]
+name = "sdp8xx-anemometer"
+version = "0.1.0"
+authors = ["Rafael Bachmann <rafael.bachmann.93@gmail.com>"]
+description = ""
+readme = "README.md"
+license = "MIT License"
+repository = ""
+edition = "2018"
+
+#[dependencies.defmt]
+#git = "https://github.com/knurling-rs/defmt"
+#branch = "main"
+
+[features]
+println_debug = ["rtt-target", "panic-rtt-target"]
+
+[dependencies]
+cortex-m-rt = { version = "0.6.10", features = ["device"] }
+embedded-hal = "0.2.4"
+rtt-target = { version = "0.2.2", features = ["cortex-m"], optional = true }
+panic-halt = "0.2.0"
+panic-rtt-target = { version = "0.1.1", features = ["cortex-m"], optional = true }
+cortex-m = "0.6.3"
+stm32f0xx-hal = { version = "0.17.1", features = ["rt", "stm32f072"] }
+bitbang-hal = { git = "https://github.com/barafael/bitbang-hal.git", branch = "master" }
+
+[dependencies.sdp8xx]
+git = "https://github.com/barafael/sdp8xx.git"
+branch = "main"
+
+[profile.release]
+opt-level = 'z'  # Optimize for size.
+lto = "thin"
+codegen-units = 1
