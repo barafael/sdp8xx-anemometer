@@ -31,6 +31,8 @@ fn main() -> ! {
 
         // Configure pins for I2C
         let timer_i2cbb1 = Timer::tim2(dp.TIM2, 200.khz(), &mut rcc);
+        let timer_i2cbb2 = Timer::tim3(dp.TIM3, 200.khz(), &mut rcc);
+        let timer_i2cbb3 = Timer::tim6(dp.TIM6, 200.khz(), &mut rcc);
 
         let mut delay = Delay::new(cp.SYST, &rcc);
 
@@ -50,7 +52,7 @@ fn main() -> ! {
 
                 gpioa.pa4.into_push_pull_output(cs),
 
-                gpioa.pa5.into_open_drain_output(cs),
+                gpioa.pa5.into_push_pull_output(cs),
 
                 gpioa.pa6.into_open_drain_output(cs),
                 gpioa.pa7.into_open_drain_output(cs),
@@ -62,90 +64,55 @@ fn main() -> ! {
         disable_interrupts(|cs| {
             i2cbb1_scl.internal_pull_up(cs, true);
             i2cbb1_sda.internal_pull_up(cs, true);
+
+            i2cbb2_scl.internal_pull_up(cs, true);
+            i2cbb2_sda.internal_pull_up(cs, true);
+
+            i2cbb3_scl.internal_pull_up(cs, true);
+            i2cbb3_sda.internal_pull_up(cs, true);
         });
 
         // Configure I2C with 100kHz rate
-        let i2c = bitbang_hal::i2c::I2cBB::new(i2cbb1_scl, i2cbb1_sda, timer_i2cbb1);
+        let i2cbb1 = bitbang_hal::i2c::I2cBB::new(i2cbb1_scl, i2cbb1_sda, timer_i2cbb1);
+        let i2cbb2 = bitbang_hal::i2c::I2cBB::new(i2cbb2_scl, i2cbb2_sda, timer_i2cbb2);
+        let i2cbb3 = bitbang_hal::i2c::I2cBB::new(i2cbb3_scl, i2cbb3_sda, timer_i2cbb3);
 
-        let mut sdp8xx = Sdp8xx::new(i2c, 0x25, delay.clone());
-
-        if let Ok(product_id) = sdp8xx.read_product_id() {
-            #[cfg(feature = "println_debug")]
-            rprintln!("Product ID: {:x?}", product_id);
-        } else {
-            #[cfg(feature = "println_debug")]
-            rprintln!("Failed to read product ID!");
-        }
-        delay.delay_ms(1000u32);
+        let mut sdp8xx1 = Sdp8xx::new(i2cbb1, 0x25, delay.clone());
+        let mut sdp8xx2 = Sdp8xx::new(i2cbb2, 0x25, delay.clone());
+        let mut sdp8xx3 = Sdp8xx::new(i2cbb3, 0x25, delay.clone());
 
         #[cfg(feature = "println_debug")]
-        rprintln!("Sending sensor to sleep.");
-        let woken_up = if let Ok(sleeping) = sdp8xx.go_to_sleep() {
-            delay.delay_ms(1000u16);
-            sleeping.wake_up_poll()
-        } else {
+        rprintln!("Detecting sensors");
+        if let Ok(product_id) = sdp8xx1.read_product_id() {
             #[cfg(feature = "println_debug")]
-            rprintln!("Failed to send sensor to sleep!");
-            loop {}
-        };
-        let mut sdp8xx = match woken_up {
-            Ok(s) => s,
-            Err(e) => {
-                #[cfg(feature = "println_debug")]
-                rprintln!("Failed to wake up sensor! {:?}", e);
-                loop {}
-            }
-        };
-        #[cfg(feature = "println_debug")]
-        rprintln!("Woke up sensor!");
-
-        //rprintln!("Taking 10 triggered samples");
-        for _ in 0..=10 {
-            if let Ok(m) = sdp8xx.read_sample_triggered() {
-                #[cfg(feature = "println_debug")]
-                rprintln!("{:?}", m);
-            } else {
-                #[cfg(feature = "println_debug")]
-                rprintln!("Error!");
-            }
-            delay.delay_ms(1000u32);
+            rprintln!("Sensor 1 Product ID: {:x?}", product_id);
+        }
+        if let Ok(product_id) = sdp8xx2.read_product_id() {
+            #[cfg(feature = "println_debug")]
+            rprintln!("Sensor 2 Product ID: {:x?}", product_id);
+        }
+        if let Ok(product_id) = sdp8xx3.read_product_id() {
+            #[cfg(feature = "println_debug")]
+            rprintln!("Sensor 3 Product ID: {:x?}", product_id);
         }
 
-        let mut sdp_sampling = match sdp8xx.start_sampling_differential_pressure(true) {
-            Ok(s) => s,
-            Err(e) => {
-                #[cfg(feature = "println_debug")]
-                rprintln!("{:?}", e);
-                loop {}
-            }
-        };
-        for _ in 0..=50 {
-            delay.delay_ms(100u16);
-            let result = sdp_sampling.read_continuous_sample();
-            match result {
-                Ok(r) => {
-                    #[cfg(feature = "println_debug")]
-                    rprintln!("{:?}", r);
-                }
-                Err(e) => {
-                    #[cfg(feature = "println_debug")]
-                    rprintln!("Error while getting result: {:?}", e);
-                }
-            }
-        }
-        let mut idle_sensor = sdp_sampling.stop_sampling().unwrap();
         loop {
-            if let Ok(m) = idle_sensor.read_sample_triggered() {
+            if let Ok(m) = sdp8xx1.trigger_differential_pressure_sample() {
                 #[cfg(feature = "println_debug")]
-                rprintln!("{:?}", m);
-            } else {
+                rprintln!("1: {:?}", m);
+            }
+            if let Ok(m) = sdp8xx2.trigger_differential_pressure_sample() {
                 #[cfg(feature = "println_debug")]
-                rprintln!("Error!");
+                rprintln!("2: {:?}", m);
+            }
+            if let Ok(m) = sdp8xx3.trigger_differential_pressure_sample() {
+                #[cfg(feature = "println_debug")]
+                rprintln!("3: {:?}", m);
             }
             let _ = led.set_high();
-            delay.delay_ms(1000u32);
+            delay.delay_ms(500u32);
             let _ = led.set_low();
-            delay.delay_ms(1000u32);
+            delay.delay_ms(500u32);
         }
     }
     loop {}

@@ -202,7 +202,7 @@ dependencies = [
 [[package]]
 name = "sdp8xx"
 version = "0.1.0"
-source = "git+https://github.com/barafael/sdp8xx.git?branch=main#0e2ff653d0309866412b37a413261adeeac977f7"
+source = "git+https://github.com/barafael/sdp8xx.git?branch=main#9f0b0e9311568304ff294a7b9dce7d71b0a51d62"
 dependencies = [
  "embedded-hal",
  "sensirion-i2c",
