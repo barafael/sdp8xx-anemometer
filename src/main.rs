@@ -3,12 +3,13 @@
 
 use panic_halt as _;
 
+use core::fmt::Write;
+
 #[cfg(feature = "println_debug")]
 use rtt_target::{rprintln, rtt_init_print};
 
-use stm32f0xx_hal::timers::Timer;
-
 use stm32f0xx_hal::{pac, prelude::*};
+use stm32f0xx_hal::{stm32f0, timers::Timer};
 
 use cortex_m::{interrupt::free as disable_interrupts, Peripherals};
 
@@ -18,7 +19,10 @@ use panic_halt as _;
 
 use cortex_m_rt::entry;
 
-use stm32f0xx_hal::{delay::Delay};
+use stm32f0xx_hal::delay::Delay;
+use stm32f0xx_hal::serial::Serial;
+
+use nb::block;
 
 #[entry]
 fn main() -> ! {
@@ -29,7 +33,6 @@ fn main() -> ! {
         let mut flash = dp.FLASH;
         let mut rcc = dp.RCC.configure().freeze(&mut flash);
 
-        // Configure pins for I2C
         let timer_i2cbb1 = Timer::tim2(dp.TIM2, 200.khz(), &mut rcc);
         let timer_i2cbb2 = Timer::tim3(dp.TIM3, 200.khz(), &mut rcc);
         let timer_i2cbb3 = Timer::tim6(dp.TIM6, 200.khz(), &mut rcc);
@@ -42,23 +45,29 @@ fn main() -> ! {
 
         let gpiof = dp.GPIOF.split(&mut rcc);
 
-        let (mut i2cbb1_sda, mut i2cbb1_scl, mut i2cbb2_sda, mut i2cbb2_scl, pa4, mut led, mut i2cbb3_sda, mut i2cbb3_scl, i2c1_scl, i2c1_sda) = disable_interrupts(|cs| {
+        let (
+            mut i2cbb1_sda,
+            mut i2cbb1_scl,
+            mut i2cbb2_sda,
+            mut i2cbb2_scl,
+            pa4,
+            mut led,
+            mut i2cbb3_sda,
+            mut i2cbb3_scl,
+            tx_pin,
+            rx_pin,
+        ) = disable_interrupts(|cs| {
             (
                 gpioa.pa0.into_open_drain_output(cs),
                 gpioa.pa1.into_open_drain_output(cs),
-
                 gpioa.pa2.into_open_drain_output(cs),
                 gpioa.pa3.into_open_drain_output(cs),
-
                 gpioa.pa4.into_push_pull_output(cs),
-
                 gpioa.pa5.into_push_pull_output(cs),
-
                 gpioa.pa6.into_open_drain_output(cs),
                 gpioa.pa7.into_open_drain_output(cs),
-
                 gpioa.pa9.into_alternate_af1(cs),
-                gpioa.pa10.into_alternate_af1(cs)
+                gpioa.pa10.into_alternate_af1(cs),
             )
         });
         disable_interrupts(|cs| {
@@ -71,6 +80,8 @@ fn main() -> ! {
             i2cbb3_scl.internal_pull_up(cs, true);
             i2cbb3_sda.internal_pull_up(cs, true);
         });
+
+        let mut serial = Serial::usart1(dp.USART1, (tx_pin, rx_pin), 115200.bps(), &mut rcc);
 
         // Configure I2C with 100kHz rate
         let i2cbb1 = bitbang_hal::i2c::I2cBB::new(i2cbb1_scl, i2cbb1_sda, timer_i2cbb1);
@@ -96,23 +107,51 @@ fn main() -> ! {
             rprintln!("Sensor 3 Product ID: {:x?}", product_id);
         }
 
+        let mut arr: [Sample<DifferentialPressure>; 3] = [Default::default(); 3];
         loop {
             if let Ok(m) = sdp8xx1.trigger_differential_pressure_sample() {
                 #[cfg(feature = "println_debug")]
                 rprintln!("1: {:?}", m);
+                arr[0] = m;
             }
             if let Ok(m) = sdp8xx2.trigger_differential_pressure_sample() {
                 #[cfg(feature = "println_debug")]
                 rprintln!("2: {:?}", m);
+                arr[1] = m;
             }
             if let Ok(m) = sdp8xx3.trigger_differential_pressure_sample() {
                 #[cfg(feature = "println_debug")]
                 rprintln!("3: {:?}", m);
+                arr[2] = m;
             }
+
+            let view = &arr as *const _ as *const u8;
+            let slice = unsafe {
+                core::slice::from_raw_parts(
+                    view,
+                    core::mem::size_of::<[Sample<DifferentialPressure>; 3]>(),
+                )
+            };
+            for byte in slice {
+                block!(serial.write(*byte)).ok();
+            }
+            block!(serial.write(b'\n')).ok();
+
+            #[cfg(feature = "big_flash")]
+            match writeln!(serial, "{:?}", arr) {
+                Ok(_) => {}
+                Err(_) => {
+                    #[cfg(feature = "println_debug")]
+                    rprintln!("Could not writeln!.");
+                }
+            }
+
+            arr = Default::default();
+
             let _ = led.set_high();
-            delay.delay_ms(500u32);
+            delay.delay_ms(200u32);
             let _ = led.set_low();
-            delay.delay_ms(500u32);
+            delay.delay_ms(200u32);
         }
     }
     loop {}
