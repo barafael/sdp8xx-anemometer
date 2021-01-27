@@ -56,13 +56,26 @@ dependencies = [
 
 [[package]]
 name = "cortex-m"
-version = "0.6.4"
+version = "0.6.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "88cdafeafba636c00c467ded7f1587210725a1adfab0c24028a7844b87738263"
+checksum = "9075300b07c6a56263b9b582c214d0ff037b00d45ec9fde1cc711490c56f1bb9"
 dependencies = [
  "aligned",
  "bare-metal",
  "bitfield",
+ "cortex-m 0.7.1",
+ "volatile-register",
+]
+
+[[package]]
+name = "cortex-m"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a0b756a8bffc56025de45218a48ff9b801180440c0ee49a722b32d49dcebc771"
+dependencies = [
+ "bare-metal",
+ "bitfield",
+ "embedded-hal",
  "volatile-register",
 ]
 
@@ -152,7 +165,7 @@ version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cfcd4deccf5edead7dcd0531448f0bab1b935e6d88e47225b4b7c6bd3a443180"
 dependencies = [
- "cortex-m",
+ "cortex-m 0.6.7",
  "rtt-target",
 ]
 
@@ -186,7 +199,7 @@ version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0869b4c5b6a6d8c5583fc473f9eb3423a170f77626b8c8a7fb18eddcda5770e2"
 dependencies = [
- "cortex-m",
+ "cortex-m 0.6.7",
  "ufmt-write",
 ]
 
@@ -202,6 +215,7 @@ dependencies = [
 [[package]]
 name = "sdp8xx"
 version = "0.1.0"
+source = "git+https://github.com/barafael/sdp8xx.git?branch=main#5efff24d096779e893eeee5ecb8c1ec396a811d0"
 dependencies = [
  "embedded-hal",
  "sensirion-i2c",
@@ -212,10 +226,10 @@ name = "sdp8xx-anemometer"
 version = "0.1.0"
 dependencies = [
  "bitbang-hal",
- "cortex-m",
+ "cortex-m 0.6.7",
  "cortex-m-rt",
  "embedded-hal",
- "nb 0.1.3",
+ "nb 1.0.0",
  "panic-halt",
  "panic-rtt-target",
  "rtt-target",
@@ -259,7 +273,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9673b9c3ecdf8ea1133492f3070515d64f51e98439710eae062552fc80b94a6c"
 dependencies = [
  "bare-metal",
- "cortex-m",
+ "cortex-m 0.6.7",
  "cortex-m-rt",
  "vcell",
 ]
@@ -272,7 +286,7 @@ checksum = "a01836951a5eb4d322f31c63a30dcfcaec383f88d6d89cadb90311c00e564a3b"
 dependencies = [
  "bare-metal",
  "cast",
- "cortex-m",
+ "cortex-m 0.6.7",
  "embedded-hal",
  "nb 0.1.3",
  "stm32f0",
@@ -281,9 +295,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "1.0.58"
+version = "1.0.60"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cc60a3d73ea6594cd712d830cc1f0390fd71542d8c8cd24e70cc54cdfd5e05d5"
+checksum = "c700597eca8a5a762beb35753ef6b94df201c81cca676604f547495a0d7f0081"
 dependencies = [
  "proc-macro2",
  "quote",

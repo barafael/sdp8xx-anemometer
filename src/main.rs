@@ -3,13 +3,14 @@
 
 use panic_halt as _;
 
+#[cfg(feature = "big_flash")]
 use core::fmt::Write;
 
 #[cfg(feature = "println_debug")]
 use rtt_target::{rprintln, rtt_init_print};
 
+use stm32f0xx_hal::timers::Timer;
 use stm32f0xx_hal::{pac, prelude::*};
-use stm32f0xx_hal::{stm32f0, timers::Timer};
 
 use cortex_m::{interrupt::free as disable_interrupts, Peripherals};
 
