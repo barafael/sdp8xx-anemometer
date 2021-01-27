@@ -17,4 +17,4 @@ jobs:
             components: rustfmt, clippy
       - name: Run tests
 
-        run: rustup target add thumbv6m-none-eabi && cargo test --release --verbose
+        run: rustup target add thumbv6m-none-eabi && cargo build --release --verbose
