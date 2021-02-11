@@ -115,29 +115,10 @@ fn main() -> ! {
             }
             block!(serial.write(b'\n')).ok();
 
-            /*
-        match writeln!(serial, "LOOP") {
-            Ok(_) => {}
-            Err(_) => {}
-        }
-        */
-
-            /*
-            match writeln!(serial, "{:?}", arr) {
-                Ok(_) => {}
-                Err(_) => {
-                    #[cfg(feature = "println_debug")]
-                    rprintln!("Could not writeln!.");
-                }
-            }
-            */
-
-            arr = Default::default();
-
             let _ = led.set_high();
-            delay.delay_ms(200u32);
+            delay.delay_ms(100u32);
             let _ = led.set_low();
-            delay.delay_ms(200u32);
+            delay.delay_ms(100u32);
         }
     }
     loop {}
