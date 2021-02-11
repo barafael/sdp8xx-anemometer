@@ -8,17 +8,12 @@ license = "MIT License"
 repository = ""
 edition = "2018"
 
-[features]
-println_debug = ["rtt-target", "panic-rtt-target"]
-
 [dependencies]
-cortex-m-rt = { version = "0.6.10", features = ["device"] }
-embedded-hal = "0.2.4"
-rtt-target = { version = "0.2.2", features = ["cortex-m"], optional = true }
-panic-halt = "0.2.0"
-panic-rtt-target = { version = "0.1.1", features = ["cortex-m"], optional = true }
 cortex-m = "0.6.3"
-stm32f0xx-hal = { version = "0.17.1", features = ["rt", "stm32f072"] }
+cortex-m-rt = { version = "0.6.10", features = ["device"] }
+panic-halt = "0.2.0"
+embedded-hal = "0.2.4"
+stm32f0xx-hal = { version = "0.17.1", features = ["rt", "stm32f042"] }
 bitbang-hal = { git = "https://github.com/barafael/bitbang-hal.git", branch = "master" }
 nb = "*"
 
