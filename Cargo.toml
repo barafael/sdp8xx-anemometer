@@ -14,7 +14,7 @@ cortex-m-rt = { version = "0.6.10", features = ["device"] }
 panic-halt = "0.2.0"
 embedded-hal = "0.2.4"
 stm32f0xx-hal = { version = "0.17.1", features = ["rt", "stm32f042"] }
-bitbang-hal = { git = "https://github.com/barafael/bitbang-hal.git", branch = "master" }
+bitbang-hal = { git = "https://github.com/sajattack/bitbang-hal", branch = "master" }
 nb = "*"
 
 [dependencies.sdp8xx]

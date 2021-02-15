@@ -104,12 +104,8 @@ fn main() -> ! {
             }
 
             let view = &arr as *const _ as *const u8;
-            let slice = unsafe {
-                core::slice::from_raw_parts(
-                    view,
-                    core::mem::size_of::<[f32; 3]>(),
-                )
-            };
+            let slice =
+                unsafe { core::slice::from_raw_parts(view, core::mem::size_of::<[f32; 3]>()) };
             for byte in slice {
                 block!(serial.write(*byte)).ok();
             }
