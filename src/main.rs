@@ -29,19 +29,14 @@ fn main() -> ! {
 
         let gpioa = dp.GPIOA.split(&mut rcc);
 
-        let gpiob = dp.GPIOB.split(&mut rcc);
-
-        let gpiof = dp.GPIOF.split(&mut rcc);
-
         let (
-            mut i2cbb1_sda,
             mut i2cbb1_scl,
-            mut i2cbb2_sda,
+            mut i2cbb1_sda,
             mut i2cbb2_scl,
-            pa4,
+            mut i2cbb2_sda,
             mut led,
-            mut i2cbb3_sda,
             mut i2cbb3_scl,
+            mut i2cbb3_sda,
             tx_pin,
             rx_pin,
         ) = disable_interrupts(|cs| {
@@ -50,7 +45,6 @@ fn main() -> ! {
                 gpioa.pa1.into_open_drain_output(cs),
                 gpioa.pa2.into_open_drain_output(cs),
                 gpioa.pa3.into_open_drain_output(cs),
-                gpioa.pa4.into_push_pull_output(cs),
                 gpioa.pa5.into_push_pull_output(cs),
                 gpioa.pa6.into_open_drain_output(cs),
                 gpioa.pa7.into_open_drain_output(cs),
