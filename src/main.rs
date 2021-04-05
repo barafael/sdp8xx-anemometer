@@ -21,6 +21,8 @@ use stm32f0xx_hal::serial::Serial;
 
 use nb::block;
 
+use bitbang_hal::i2c::*;
+
 #[entry]
 fn main() -> ! {
     if let (Some(dp), Some(cp)) = (pac::Peripherals::take(), Peripherals::take()) {
@@ -77,9 +79,9 @@ fn main() -> ! {
         let timer_i2cbb3 = Timer::tim1(dp.TIM1, 200.khz(), &mut rcc);
 
         // Configure I2C with 100kHz rate
-        let i2cbb1 = bitbang_hal::i2c::I2cBB::new(i2cbb1_scl, i2cbb1_sda, timer_i2cbb1);
-        let i2cbb2 = bitbang_hal::i2c::I2cBB::new(i2cbb2_scl, i2cbb2_sda, timer_i2cbb2);
-        let i2cbb3 = bitbang_hal::i2c::I2cBB::new(i2cbb3_scl, i2cbb3_sda, timer_i2cbb3);
+        let i2cbb1 = I2cBB::new(i2cbb1_scl, i2cbb1_sda, timer_i2cbb1);
+        let i2cbb2 = I2cBB::new(i2cbb2_scl, i2cbb2_sda, timer_i2cbb2);
+        let i2cbb3 = I2cBB::new(i2cbb3_scl, i2cbb3_sda, timer_i2cbb3);
 
         let mut sdp8xx1 = Sdp8xx::new(i2cbb1, 0x25, delay.clone());
         let mut sdp8xx2 = Sdp8xx::new(i2cbb2, 0x25, delay.clone());
@@ -97,6 +99,7 @@ fn main() -> ! {
                 arr[2] = m.get_differential_pressure();
             }
 
+            // TODO use MIRI to check if this is undefined.
             let view = &arr as *const _ as *const u8;
             let slice =
                 unsafe { core::slice::from_raw_parts(view, core::mem::size_of::<[f32; 3]>()) };
@@ -106,9 +109,9 @@ fn main() -> ! {
             block!(serial.write(b'\n')).ok();
 
             let _ = led.set_high();
-            delay.delay_ms(100u32);
+            delay.delay_ms(50u32);
             let _ = led.set_low();
-            delay.delay_ms(100u32);
+            delay.delay_ms(50u32);
         }
     }
     loop {}
